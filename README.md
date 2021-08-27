@@ -2,6 +2,10 @@
 
 **Purpose:** This code base is for students looking to jumpstart a standard demo application for IRIS systems. It offers controls on the left-hand side, including ability to specify presets as well as user-defined inputs and outputs. This application is intended for use in primarily imaging situations and uses OpenCV functions and `pixMap` from PyQt5 for displaying video and images. For example, if you needed to showcase a convolutional neural network (CNN), you could use this application as a template and add your own custom functionality.
 
+<p align="center">
+  <img width="460" height="300" src="demo.gif">
+</p>
+
 ## Requirements
 
 **Python version:** 3.6 (tested) but 3.7 should work
