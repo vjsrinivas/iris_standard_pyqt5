@@ -62,11 +62,12 @@ class ThreadWorker(QThread):
         if self.media_type == MediaType.IMAGE:
             t1 = time.time()
             img = cv2.imread(self.media_path)
+            assert type(img) != type(None), "Image cannot be read: %s"%self.media_path
             if self.method == MethodType.GAUSSIAN_NOISE:
                 img = ImageMethods.gaussian_noise(img)
             elif self.method == MethodType.GAUSSIAN_BLUR:
                 img = ImageMethods.gaussian_blur(img)
-            assert type(img) != type(None), "Image cannot be read: %s"%self.media_path
+            cv2.imwrite(self.media_out_path, img)
             self.change_pixmap_signal.emit((img, t1))
 
         elif self.media_type == MediaType.VIDEO_FILE:
@@ -107,6 +108,7 @@ class MainWindow(QMainWindow):
         self.__presetSetup__()
     
         uic.loadUi(path, self)
+        self.setWindowTitle("Demo Application")
         # Set up combo box with presets and custom:
         for preset in self.presets:
             self.presetComboBox.addItem(preset.TITLE)
