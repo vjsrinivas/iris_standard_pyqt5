@@ -10,22 +10,13 @@ import cv2
 import numpy as np
 import time
 
-class ImageMethods:
-    @staticmethod
-    # Dummy Actions applied to image!
-    def gaussian_blur(image):
-        return cv2.GaussianBlur(image, (37,37), cv2.BORDER_DEFAULT)
-
-    @staticmethod
-    def gaussian_noise(image, seed=10):
-        noise_matrix = np.random.normal(2, 50, size=image.shape)
-        image = image+noise_matrix
-        image = np.clip(image, 0, 255).astype(np.uint8)
-        return image
+# Import statements within python folder:
+sys.path.append('./src/main/python/')
+import cnn_models as models
+import cnns.yolo.detect
 
 class MethodType:
-    GAUSSIAN_NOISE = 0
-    GAUSSIAN_BLUR = 1
+    YOLOV4 = 0
 
 class MediaType:
     IMAGE = 0
@@ -38,6 +29,7 @@ class PresetOption:
     MEDIA_PATH = ''
     MEDIA_OUT_PATH = ''
     METHOD = ''
+
     def __init__(self, title, media_type, media_path, media_out_path, method) -> None:
         self.TITLE = title
         self.MEDIA_PATH = media_path
@@ -56,6 +48,11 @@ class ThreadWorker(QThread):
         self.media_out_path = media_out_path
         self.method = method
 
+        # LOAD NETWORK:
+        if self.method == MethodType.YOLOV4:
+            self.opt = models.YOLOv4_VOC.compile()
+            self.model, self.device = cnns.yolo.detect.load_model(self.opt)
+
     def run(self):
         self._run_flag = True
 
@@ -63,12 +60,12 @@ class ThreadWorker(QThread):
             t1 = time.time()
             img = cv2.imread(self.media_path)
             assert type(img) != type(None), "Image cannot be read: %s"%self.media_path
-            if self.method == MethodType.GAUSSIAN_NOISE:
-                img = ImageMethods.gaussian_noise(img)
-            elif self.method == MethodType.GAUSSIAN_BLUR:
-                img = ImageMethods.gaussian_blur(img)
+
+            # EXECUTE YOUR STUFF HERE:
+            img, speed, labels = cnns.yolo.detect.detect(self.model, img, self.opt, self.device)
+
             cv2.imwrite(self.media_out_path, img)
-            self.change_pixmap_signal.emit((img, t1))
+            self.change_pixmap_signal.emit((img, t1, speed, labels))
 
         elif self.media_type == MediaType.VIDEO_FILE:
             videoIn = cv2.VideoCapture(self.media_path)
@@ -80,16 +77,13 @@ class ThreadWorker(QThread):
                 if not ret:
                     break
 
+                # EXECUTE YOUR STUFF HERE:
+                frame, speed, labels = cnns.yolo.detect.detect(self.model, frame, self.opt, self.device)
+
                 if type(videoOut) == type(None):
                     videoOut = cv2.VideoWriter(self.media_out_path, cv2.VideoWriter_fourcc(*"mp4v"), 30, (frame.shape[1], frame.shape[0]))
+                self.change_pixmap_signal.emit((frame, t1, speed, labels))
 
-                if self.method == MethodType.GAUSSIAN_NOISE:
-                    frame = ImageMethods.gaussian_noise(frame)
-                elif self.method == MethodType.GAUSSIAN_BLUR:
-                    frame = ImageMethods.gaussian_blur(frame)
-                videoOut.write(frame)
-
-                self.change_pixmap_signal.emit((frame, t1))
             videoIn.release()
             videoOut.release()
 
@@ -139,14 +133,14 @@ class MainWindow(QMainWindow):
                 MediaType.IMAGE,
                 os.path.join(self.imageFolderExample, 'selfie.jpg'),
                 os.path.join(self.imageFolderExample, 'out_selfie.jpg'),
-                MethodType.GAUSSIAN_NOISE
+                MethodType.YOLOV4
             ),
             PresetOption(
                 'Video Demo #1',
                 MediaType.VIDEO_FILE, 
                 os.path.join(self.videoFolderExample, 'people_walking.mp4'),
                 os.path.join(self.videoFolderExample, 'out_people_walking.mp4'),
-                MethodType.GAUSSIAN_BLUR
+                MethodType.YOLOV4
             )
         ]
 
@@ -173,11 +167,12 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(tuple)
     def __updateImage__(self, frame_tuple):
-        frame, t1 = frame_tuple
+        frame, t1, model_speed, labels = frame_tuple
         qtFrame = self.convertCV2QT(frame)
         self.pixMap.setPixmap(qtFrame)
         t2 = time.time()
-        self.fpsLabelStat.setText("FPS: %0.3f"%(1/(t2-t1)))
+        self.fpsLabelStat.setText("FPS: %0.3f (Model Inference Speed: %0.3f)"%(1/(t2-t1), model_speed))
+        self.metaStats.setText(labels)
 
     def __launch__(self):
         comboBoxLength = self.presetComboBox.count()

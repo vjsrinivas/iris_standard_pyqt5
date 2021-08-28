@@ -1,0 +1,8 @@
+train: ./voc2/train.txt
+#val: ./voc2/2007_val.txt
+val: ./voc2/2007_test.txt
+test: ./voc2/2007_test.txt
+
+nc: 20
+
+names: ['aeroplane','bicycle','bird','boat','bottle','bus','car','cat','chair','cow','diningtable','dog','horse','motorbike','person','pottedplant','sheep','sofa','train','tvmonitor']
