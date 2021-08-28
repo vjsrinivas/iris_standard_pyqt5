@@ -129,14 +129,14 @@ class MainWindow(QMainWindow):
     def __presetSetup__(self):
         self.presets = [
             PresetOption(
-                'Image Demo #1',
+                'Image Demo #1 (YOLOv4 VOC)',
                 MediaType.IMAGE,
                 os.path.join(self.imageFolderExample, 'selfie.jpg'),
                 os.path.join(self.imageFolderExample, 'out_selfie.jpg'),
                 MethodType.YOLOV4
             ),
             PresetOption(
-                'Video Demo #1',
+                'Video Demo #1 (YOLOv4 VOC)',
                 MediaType.VIDEO_FILE, 
                 os.path.join(self.videoFolderExample, 'people_walking.mp4'),
                 os.path.join(self.videoFolderExample, 'out_people_walking.mp4'),
