@@ -37,6 +37,7 @@ typing-extensions==3.10.0.0
 2. **(Highly Recommended)** Create a virutal Python environment: `python3 -m venv dev`
 3. **(If you made a virtual environment)** Activate environment: `source dev/bin/activate`
 4. Install dependencies: `pip install -r requirements.txt`
-    - Note: if you do not have a CUDA-compatiable GPU, remove the `+cu102` from `requirements.txt`
+5. Install PyTorch: `bash torch_install.sh `
+    - Note: if you do not have a CUDA-compatiable GPU, remove the `+cu102` from script
 5. Download [pretrained model](https://drive.google.com/file/d/1WeRV6fLANM5qJ31aN8RY4ct8d5zJX4XG/view?usp=sharing) folder and place it in the following directory `src/main/python/cnns/yolo/runs/` 
 6. Launch application: `fbs run` (User has to be on top-level folder, where the `src` folder is visible) 

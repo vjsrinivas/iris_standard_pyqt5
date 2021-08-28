@@ -18,8 +18,5 @@ PyYAML==5.4.1
 scipy==1.5.4
 sip==4.19.8
 six==1.16.0
-torch==1.8.1+cu102
-torchaudio==0.8.0
-torchvision==0.9.1+cu102
 tqdm==4.62.2
 typing-extensions==3.10.0.0
