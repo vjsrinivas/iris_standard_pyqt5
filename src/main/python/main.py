@@ -106,6 +106,9 @@ class MainWindow(QMainWindow):
         self.videoFolderExample = appContext.get_resource('example_videos')
         self.base = appContext.get_resource("")
         self.__presetSetup__()
+
+        # Set dummy variable for main worker thread:
+        self.worker = None
     
         uic.loadUi(path, self)
         self.setWindowTitle("Demo Application")
@@ -129,7 +132,7 @@ class MainWindow(QMainWindow):
         # file browser button actions:
         self.inputBrowse.clicked.connect(lambda: self.__openFileBrowser__(self.imageFolderExample, self.inputPath))
         self.outputBrowse.clicked.connect(lambda: self.__openFileBrowser__(self.base, self.outputPath))
-
+        
         self.show()
 
     def __presetSetup__(self):
@@ -180,24 +183,34 @@ class MainWindow(QMainWindow):
         self.fpsLabelStat.setText("FPS: %0.3f"%(1/(t2-t1)))
 
     def __launch__(self):
-        comboBoxLength = self.presetComboBox.count()
-        currentI = self.presetComboBox.currentIndex()
-        if currentI != comboBoxLength-1:
-            # presets:
-            media_type = self.presets[currentI].MEDIA_TYPE
-            media_path = self.presets[currentI].MEDIA_PATH
-            media_out_path = self.presets[currentI].MEDIA_OUT_PATH
-            method = self.presets[currentI].METHOD
+        if self.worker is not None and self.worker.isRunning():
+            # This is where the button will reset the worker from whatever it was working on:
+            # This does not kill the thread variable, only the thread allocation
+            self.worker.stop()
+            self.runButton.setText("RUN")
         else:
-            media_type = self.__determineCustomType__()
-            media_path = self.inputPath.text()
-            media_out_path = self.outputPath.text()
-            method = MethodType.GAUSSIAN_NOISE # hardset for now
+            comboBoxLength = self.presetComboBox.count()
+            currentI = self.presetComboBox.currentIndex()
+            if currentI != comboBoxLength-1:
+                # presets:
+                media_type = self.presets[currentI].MEDIA_TYPE
+                media_path = self.presets[currentI].MEDIA_PATH
+                media_out_path = self.presets[currentI].MEDIA_OUT_PATH
+                method = self.presets[currentI].METHOD
+            else:
+                media_type = self.__determineCustomType__()
+                media_path = self.inputPath.text()
+                media_out_path = self.outputPath.text()
+                method = MethodType.GAUSSIAN_NOISE # hardset for now
+                
+            if media_type == MediaType.VIDEO_FILE:
+                # Change button to "stop" mode:
+                self.runButton.setText("STOP VIDEO")
 
-        # Set up another thread for Video/Image I/O:
-        self.thread = ThreadWorker(media_type, media_path, media_out_path, method)
-        self.thread.change_pixmap_signal.connect(self.__updateImage__)
-        self.thread.start()
+            # Set up another thread for Video/Image I/O:
+            self.worker = ThreadWorker(media_type, media_path, media_out_path, method)
+            self.worker.change_pixmap_signal.connect(self.__updateImage__)
+            self.worker.start()
 
     def __determineCustomType__(self):
         if self.imageRadio.isChecked():

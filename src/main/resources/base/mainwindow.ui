@@ -164,7 +164,7 @@
    <widget class="QLabel" name="fpsLabelStat">
     <property name="geometry">
      <rect>
-      <x>294</x>
+      <x>300</x>
       <y>380</y>
       <width>621</width>
       <height>17</height>
