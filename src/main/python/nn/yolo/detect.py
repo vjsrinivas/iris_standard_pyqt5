@@ -2,17 +2,12 @@ import time
 from pathlib import Path
 
 import sys
-sys.path.append('./src/main/python/cnns/yolo')
+sys.path.append('./src/main/python/nn/yolo')
 
-import cv2
 import torch
-import torch.backends.cudnn as cudnn
-from numpy import random
-
 from utils.general import (
     non_max_suppression, scale_coords, xyxy2xywh, plot_one_box)
 from utils.torch_utils import select_device, time_synchronized
-
 from models.models import *
 from models.experimental import *
 from utils.datasets import *
@@ -46,13 +41,9 @@ def load_model(opt):
     
     return model, device
 
-def detect(model, frame, opt, device, save_img=False):
+def detect(model, frame, opt, device):
     t1 = time.time()
     imgsz, names, half = opt.img_size, opt.names, opt.half
-
-    # Get names and colors
-    random.seed(10)
-    colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
 
     # Run inference
     t0 = time.time()
@@ -96,7 +87,9 @@ def detect(model, frame, opt, device, save_img=False):
             # Write results
             for *xyxy, conf, cls in det:
                 label = '%s %.2f' % (names[int(cls)], conf)
-                plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                #plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+    
     t2 = time.time()
     inference_speed = 1/(t2-t1)
-    return im0, inference_speed, s
+    return det, inference_speed, s
+    #return im0, inference_speed, s

@@ -12,11 +12,8 @@ import time
 
 # Import statements within python folder:
 sys.path.append('./src/main/python/')
-import cnn_models as models
-import cnns.yolo.detect
-
-class MethodType:
-    YOLOV4 = 0
+import detectors
+import config
 
 class MediaType:
     IMAGE = 0
@@ -49,9 +46,7 @@ class ThreadWorker(QThread):
         self.method = method
 
         # LOAD NETWORK:
-        if self.method == MethodType.YOLOV4:
-            self.opt = models.YOLOv4_VOC.compile()
-            self.model, self.device = cnns.yolo.detect.load_model(self.opt)
+        self.model = detectors.YOLOv4(config.YOLOV4_VOC)
 
     def run(self):
         self._run_flag = True
@@ -62,7 +57,10 @@ class ThreadWorker(QThread):
             assert type(img) != type(None), "Image cannot be read: %s"%self.media_path
 
             # EXECUTE YOUR STUFF HERE:
-            img, speed, labels = cnns.yolo.detect.detect(self.model, img, self.opt, self.device)
+            preds = self.model.run(img)
+            speed = self.model.inferTime
+            labels = self.model.detectionLabels
+            img = self.model.draw(preds, img)
 
             cv2.imwrite(self.media_out_path, img)
             self.change_pixmap_signal.emit((img, t1, speed, labels))
@@ -78,11 +76,14 @@ class ThreadWorker(QThread):
                     break
 
                 # EXECUTE YOUR STUFF HERE:
-                frame, speed, labels = cnns.yolo.detect.detect(self.model, frame, self.opt, self.device)
+                preds = self.model.run(frame)
+                speed = self.model.inferTime
+                labels = self.model.detectionLabels
+                frame = self.model.draw(preds, frame)
 
                 if type(videoOut) == type(None):
                     videoOut = cv2.VideoWriter(self.media_out_path, cv2.VideoWriter_fourcc(*"mp4v"), 30, (frame.shape[1], frame.shape[0]))
-                self.change_pixmap_signal.emit((frame, t1, speed, labels))
+                self.change_pixmap_signal.emit((frame, t1, speed, labels)) # Slow because sending over a whole frame!
 
             videoIn.release()
             videoOut.release()
@@ -133,14 +134,14 @@ class MainWindow(QMainWindow):
                 MediaType.IMAGE,
                 os.path.join(self.imageFolderExample, 'selfie.jpg'),
                 os.path.join(self.imageFolderExample, 'out_selfie.jpg'),
-                MethodType.YOLOV4
+                ''
             ),
             PresetOption(
                 'Video Demo #1 (YOLOv4 VOC)',
                 MediaType.VIDEO_FILE, 
                 os.path.join(self.videoFolderExample, 'people_walking.mp4'),
                 os.path.join(self.videoFolderExample, 'out_people_walking.mp4'),
-                MethodType.YOLOV4
+                ''
             )
         ]
 
