@@ -41,3 +41,17 @@ typing-extensions==3.10.0.0
     - Note: if you do not have a CUDA-compatiable GPU, remove the `+cu102` from script
 5. Download [pretrained model](https://drive.google.com/file/d/1WeRV6fLANM5qJ31aN8RY4ct8d5zJX4XG/view?usp=sharing) folder and place it in the following directory `src/main/python/cnns/yolo/runs/` 
 6. Launch application: `fbs run` (User has to be on top-level folder, where the `src` folder is visible) 
+
+## Model Setup
+As stated above, this fork contains code to allow the execution of various CNNs. The default network is a [PyTorch implementation of YOLOv4](https://github.com/WongKinYiu/PyTorch_YOLOv4), but this can be expanded to many other kinds of networks. To get started with adding a new network, please refer to the `main.py` file. In this file, there contains an ambiguous network called `self.model`, which will be defined in the `__init__` function of the ThreadWorker:
+
+```python
+class ThreadWorker(QThread):
+    def __init__(self, ...):
+        ...
+        self.model = detectors.YOLOv4(config.YOLOV4_VOC)
+```
+
+As you can see, the `self.model` is the object of "YOLOV4_VOC", which is a specific instance of the Model class definition (located in `detectors.py`).
+
+The Model class is an abstract class that will need to be used to interface with the main execution thread. **To add a new network, you will need to create a class that inherits the Model class and implement the required functions.** Other helper functions for statistics or additional processing can be placed in the inherited class. The new network's actual preprocessing/inference/postprocessing can be placed and wrapped up in the `nn` folder. Please refer to the `detect.py` in `nn/yolo/detect.py` for reference.
