@@ -29,7 +29,7 @@ def load_model(opt):
     half = opt.half
 
     # Load model
-    model = Darknet(cfg, imgsz).cuda()
+    model = Darknet(cfg, imgsz)
     try:
         model.load_state_dict(torch.load(weights[0], map_location=device)['model'])
     except:
